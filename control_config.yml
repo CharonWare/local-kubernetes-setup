@@ -1,0 +1,125 @@
+---
+- name: Kubernetes control plane setup
+  hosts: control
+  vars:
+  gather_facts: false
+
+# playbook designed with data from https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+  tasks:
+
+#  - name: Pip install python-firewall
+#    ansible.builtin.pip:
+#      name: python-firewall
+#      state: present
+
+  - name: Update the apt cache
+    become: true
+    ansible.builtin.apt:
+      update_cache: true
+
+  - name: Install apt-transport-https
+    become: true
+    ansible.builtin.apt:
+      name: apt-transport-https
+      state: present
+
+  - name: Install ca-certificates
+    become: true
+    ansible.builtin.apt:
+      name: ca-certificates
+      state: present
+
+  - name: Install firewalld
+    become: true
+    ansible.builtin.apt:
+      name: firewalld
+      state: present
+
+  - name: Create directory for keyrings
+    become: true
+    ansible.builtin.file:
+      path: /etc/apt/keyrings
+      state: directory
+      mode: '0644'
+
+  - name: Download the Google Cloud public signing key
+    become: true
+    ansible.builtin.get_url:
+      dest: /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      mode: '0644'
+
+  - name: Create kubernetes.list file
+    become: true
+    ansible.builtin.file:
+      path: /etc/apt/sources.list.d/kubernetes.list
+      state: touch
+      mode: '0644'
+      access_time: preserve
+
+  - name: Add kubernetes apt repository to kubernetes.list file
+    become: true
+    ansible.builtin.lineinfile:
+      path: /etc/apt/sources.list.d/kubernetes.list
+      line: deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+      insertbefore: BOF
+
+  - name: Open Kubernetes API server port
+    become: true
+    ansible.posix.firewalld:
+      port: 6443/tcp
+      permanent: true
+      state: enabled
+
+  - name: Open etcd server client API port
+    become: true
+    ansible.posix.firewalld:
+      port: 2379-2380/tcp
+      permanent: true
+      state: enabled
+
+  - name: Open kubelet API port
+    become: true
+    ansible.posix.firewalld:
+      port: 10250/tcp
+      permanent: true
+      state: enabled
+
+  - name: Open kube-scheduler port
+    become: true
+    ansible.posix.firewalld:
+      port: 10259/tcp
+      permanent: true
+      state: enabled
+
+  - name: Open kube-controller-manager port
+    become: true
+    ansible.posix.firewalld:
+      port: 10257/tcp
+      permanent: true
+      state: enabled
+
+  - name: Update the apt cache again
+    become: true
+    ansible.builtin.apt:
+      update_cache: true
+
+  - name: Install kubeadm
+    become: true
+    ansible.builtin.apt:
+      name: kubeadm
+      state: present
+
+  - name: Install kubelet
+    become: true
+    ansible.builtin.apt:
+      name: kubelet
+      state: present
+
+  - name: Install kubectl
+    become: true
+    ansible.builtin.apt:
+      name: kubectl
+      state: present
+...

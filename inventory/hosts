@@ -1,0 +1,14 @@
+[control]
+pi
+
+[worker]
+charonware
+
+[control:vars]
+ansible_user = pi
+ansible_private_key_file = /home/conor/.ssh/id_rsa
+
+[worker:vars]
+ansible_user = charon
+ansible_private_key_file = /home/conor/.ssh/id_rsa
+
