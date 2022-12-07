@@ -6,7 +6,23 @@
 
 # playbook designed with data from https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 
+# installing a container runtime via this playbook also needs doing: https://github.com/containerd/containerd/blob/main/docs/getting-started.md
+
   tasks:
+  - name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
+    become: true
+    ansible.builtin.shell: |
+      swapoff -a
+    register: my_output
+    changed_when: my_output.rc != 0 # Uses the return code to define when the task has changed.
+
+  - name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+    become: true
+    ansible.builtin.replace:
+      path: /etc/fstab
+      regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+      replace: '# \1'
+
   - name: Update the apt cache
     become: true
     ansible.builtin.apt:
