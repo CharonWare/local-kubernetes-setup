@@ -29,6 +29,7 @@
       src: /home/{{ ansible_user }}/cni-plugins-linux-amd64-v1.1.1.tgz
       dest: /opt/cni/bin
       remote_src: true
+      creates: /opt/cni/bin/bandwidth
 
   - name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
     become: true
@@ -114,6 +115,12 @@
     become: true
     ansible.builtin.apt:
       update_cache: true
+
+  - name: Install containerd
+    become: true
+    ansible.builtin.apt:
+      name: containerd
+      state: present
 
   - name: Install kubeadm
     become: true
