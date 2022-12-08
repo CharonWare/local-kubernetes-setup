@@ -65,12 +65,12 @@
     register: my_output
     changed_when: my_output.rc != 0 # Uses the return code to define when the task has changed.
 
-  - name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+  - name: Disable SWAP since kubernetes can't work with swap enabled (2/2)
     become: true
-    ansible.builtin.replace:
-      path: /etc/fstab
-      regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
-      replace: '# \1'
+    ansible.builtin.script: |
+      templates/pi_disable_swap.sh
+    args:
+      creates: /home/{{ ansible_user }}/swapoff.txt
 
   - name: Update the apt cache
     become: true
@@ -187,4 +187,16 @@
     ansible.builtin.apt:
       name: kubectl
       state: present
+
+  - name: Copy custom config.toml file to control plane
+    become: true
+    ansible.builtin.template:
+      src: config.toml
+      dest: /etc/containerd/config.tml
+      mode: '0644'
+
+# to add:
+# task to check and edit the /boot/cmdline.txt, create a reboot handler for this
+# best way to implement kubeadm init and receive the token details back
+# configure network plugins as kubelet logging says "Network plugin returns error: cni plugin not initialized"
 ...
