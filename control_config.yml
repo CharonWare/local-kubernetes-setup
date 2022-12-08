@@ -5,8 +5,7 @@
   gather_facts: false
 
 # playbook designed with data from https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
-
-# installing a container runtime via this playbook also needs doing: https://github.com/containerd/containerd/blob/main/docs/getting-started.md
+# designed for use on raspberry pi
 
   tasks:
 

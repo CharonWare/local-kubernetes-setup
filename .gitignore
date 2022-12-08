@@ -1,1 +1,2 @@
 secrets.yml
+group_vars/worker.yml
