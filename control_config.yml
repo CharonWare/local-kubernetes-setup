@@ -9,6 +9,56 @@
 # installing a container runtime via this playbook also needs doing: https://github.com/containerd/containerd/blob/main/docs/getting-started.md
 
   tasks:
+
+  - name: Download runc for arm64
+    ansible.builtin.get_url:
+      dest: /home/{{ ansible_user }}/runc.arm64
+      url: https://github.com/opencontainers/runc/releases/download/v1.1.4/runc.arm64
+      mode: '0755'
+      checksum: sha256:dbb71e737eaef454a406ce21fd021bd8f1b35afb7635016745992bbd7c17a223
+
+  - name: Download CNI for arm64
+    ansible.builtin.get_url:
+      dest: /home/{{ ansible_user }}/cni-plugins-linux-arm64-v1.1.1.tgz
+      url: https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-arm64-v1.1.1.tgz
+      mode: '0755'
+      checksum: sha1:d5a61b20401e5e0ff71d032bc0c4a9a2b7aed8e4
+
+  - name: Download containerd for arm64
+    ansible.builtin.get_url:
+      dest: /home/{{ ansible_user }}/containerd-1.6.12-linux-arm64.tar.gz
+      url: https://github.com/containerd/containerd/releases/download/v1.6.12/containerd-1.6.12-linux-arm64.tar.gz
+      mode: '0755'
+      checksum: sha256:0a0133336596b2d1dcafe3587eb91ab302afc28f273614e0e02300694b5457a0
+
+  - name: Install runc
+    become: true
+    ansible.builtin.shell: |
+      install -m 755 /home/{{ ansible_user }}/runc.arm64 /usr/local/sbin/runc
+    args:
+      creates: /usr/local/sbin/runc
+
+  - name: Create /opt/cni/bin
+    become: true
+    ansible.builtin.file:
+      path: /opt/cni/bin
+      state: directory
+      mode: '0755'
+
+  - name: Unarchive CNI
+    become: true
+    ansible.builtin.unarchive:
+      src: /home/{{ ansible_user }}/cni-plugins-linux-arm64-v1.1.1.tgz
+      dest: /opt/cni/bin
+      remote_src: true
+
+  - name: Unarchive containerd
+    become: true
+    ansible.builtin.unarchive:
+      src: /home/{{ ansible_user }}/containerd-1.6.12-linux-arm64.tar.gz
+      dest: /usr/local
+      remote_src: true
+
   - name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
     become: true
     ansible.builtin.shell: |
@@ -116,7 +166,7 @@
       permanent: true
       state: enabled
 
-  - name: Update the apt cache again
+  - name: Update the apt cache 2
     become: true
     ansible.builtin.apt:
       update_cache: true
